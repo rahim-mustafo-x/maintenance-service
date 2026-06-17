@@ -85,6 +85,21 @@
             <scope>runtime</scope>
         </dependency>
 <!--        JWT Token-->
+<!--        Redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+<!--        Redis-->
+<!--        Rate limiting bucket4j-->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>8.19.0</version>
+            <scope>compile</scope>
+        </dependency>
+<!--        Rate limiting bucket4j-->
+
 <!--        Postgresql for real production-->
 <!--        <dependency>-->
 <!--            <groupId>org.postgresql</groupId>-->

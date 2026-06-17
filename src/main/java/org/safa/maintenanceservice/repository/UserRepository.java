@@ -1,5 +1,6 @@
 package org.safa.maintenanceservice.repository;
 
+import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * It is considered to be used only when login formats like UserDetailsService**/
     @Query("select u from UserEntity u where u.username=:username")
     Optional<UserEntity> findByUsername(@NonNull @Param("username") String username);
+
+    @Query("select u.id from UserEntity u where u.username=:username and u.password=:password")
+    long findByUsernameAndPassword(@NonNull @Param("username") String username, @NotNull @Param("password") String password);
 
     /** we have to add exists by unique things such as username phone number  in order to avoid 403**/
     @Query("select count(u) > 0 from UserEntity u where u.username=:username")

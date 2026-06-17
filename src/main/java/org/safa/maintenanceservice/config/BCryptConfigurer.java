@@ -1,4 +1,4 @@
-package org.safa.maintenanceservice.security;
+package org.safa.maintenanceservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

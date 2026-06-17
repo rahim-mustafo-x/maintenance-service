@@ -6,6 +6,7 @@ import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserReq
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
+import org.safa.maintenanceservice.models.exceptions.NotFoundException;
 import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +32,9 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
+    private TokenService tokenService;
+
     public AuthUserResponse loginUser(LoginUserRequest loginUserRequest) {
         //here we are putting username & password
         try {
@@ -41,7 +45,12 @@ public class UserService {
             if (!authenticate.isAuthenticated()) {
                 throw new BadCredentialsException("Bad credentials");
             }
-            return jwtService.generateToken(loginUserRequest.username());
+            AuthUserResponse response = jwtService.generateToken(loginUserRequest.username());
+            var userId = findIdByUsernameAndPassword(loginUserRequest.username(), bCryptPasswordEncoder.encode(loginUserRequest.password()));
+            //here we are saving the refreshToken
+            tokenService.saveRefreshToken(userId, response.refreshToken());
+            tokenService.saveUserIdToken(response.refreshToken(), userId);
+            return response;
         }catch (BadCredentialsException | UsernameNotFoundException e) {
             throw new BadRequestException("Bad credentials");
         }
@@ -60,13 +69,13 @@ public class UserService {
         else if (request.password().length() < 6) {
             throw new BadRequestException("Password should be at least 6 characters");
         }
-        if (request.userName().isEmpty()) {
+        if (request.username().isEmpty()) {
             throw new BadRequestException("Username is required");
         }
-        else if (request.userName().length() < 8) {
+        else if (request.username().length() < 8) {
             throw new BadRequestException("Username should be at least 8 characters");
         }
-        else if (userRepository.existsByUsername(request.userName())) {
+        else if (userRepository.existsByUsername(request.username())) {
             throw new AlreadyExistsException("Username already exists");
         }
 
@@ -81,8 +90,50 @@ public class UserService {
 
 
         UserEntity entity = userRepository.save(new UserEntity(
-                request.fullName(), request.userName(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber(), request.role().name(), request.location().latitude(), request.location().longitude()
+                request.fullName(), request.username(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber(), request.role().name(), request.location().latitude(), request.location().longitude()
         ));
-        return jwtService.generateToken(entity.getUsername());
+        AuthUserResponse response = jwtService.generateToken(request.username());
+        var userId = findIdByUsernameAndPassword(entity.getUsername(), entity.getPassword());
+        //here we are saving the refreshToken
+        tokenService.saveRefreshToken(userId, response.refreshToken());
+        tokenService.saveUserIdToken(response.refreshToken(), userId);
+        return response;
+    }
+
+    private long findIdByUsernameAndPassword(String username, String password){
+        return userRepository.findByUsernameAndPassword(username, password);
+    }
+
+    public AuthUserResponse refreshToken(String refreshToken) throws NullPointerException {
+        long userId = tokenService.getUserId(refreshToken);
+        String token = tokenService.getRefreshToken(userId);
+        if (userId==0L){
+            throw new NotFoundException("User not found");
+        }
+        if (token == null) {
+            throw new BadRequestException("Invalid refresh token");
+        } else if (!token.equals(refreshToken)) {
+            throw new BadRequestException("Invalid refresh token");
+        }
+        tokenService.deleteUserId(userId);
+        tokenService.deleteUserId(refreshToken);
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        return jwtService.generateToken(user.getUsername());
+    }
+
+    public boolean logout(String refreshToken) {
+        long userId = tokenService.getUserId(refreshToken);
+        String token = tokenService.getRefreshToken(userId);
+        if (userId==0L){
+            throw new NotFoundException("User not found");
+        }
+        if (token == null) {
+            throw new BadRequestException("Invalid refresh token");
+        } else if (!token.equals(refreshToken)) {
+            throw new BadRequestException("Invalid refresh token");
+        }
+        tokenService.deleteUserId(userId);
+        tokenService.deleteUserId(refreshToken);
+        return true;
     }
 }

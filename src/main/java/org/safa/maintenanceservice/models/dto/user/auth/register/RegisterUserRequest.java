@@ -5,7 +5,7 @@ import org.safa.maintenanceservice.models.model.UserRole;
 
 public record RegisterUserRequest(
         String fullName,
-        String userName,
+        String username,
         String phoneNumber,
         String password,
         UserRole role,
