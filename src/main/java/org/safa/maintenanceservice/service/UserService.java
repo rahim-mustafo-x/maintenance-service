@@ -98,7 +98,7 @@ public class UserService {
         ));
         AuthUserResponse response = jwtService.generateToken(request.username());
         try {
-            var userId = userRepository.findByUsername(request.username()).orElseThrow(() -> new NotFoundException("Username not found")).getId();
+            var userId = userRepository.findByUsername(entity.getUsername()).orElseThrow(() -> new NotFoundException("Username not found")).getId();
             //here we are saving the refreshToken
             tokenService.saveRefreshToken(userId, response.refreshToken());
             tokenService.saveUserIdToken(response.refreshToken(), userId);
