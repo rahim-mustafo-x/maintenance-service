@@ -88,7 +88,7 @@ public class AuthController {
                     .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), e.getMessage()));
         }
     }
-
+//this is temporary comment
     @DeleteMapping("/log-out")
     public ResponseEntity<ResponseBody<Boolean>> logout(@RequestParam String refreshToken) {
         try {
