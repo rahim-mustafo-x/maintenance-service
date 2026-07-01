@@ -1,9 +1,12 @@
 package org.safa.maintenanceservice.interceptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
+import org.safa.maintenanceservice.models.dto.ResponseBody;
+import org.safa.maintenanceservice.service.JwtService;
 import org.safa.maintenanceservice.service.RateLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,12 +18,22 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Autowired
     private RateLimitService service;
 
+    @Autowired
+    private JwtService jwtService;
+
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
-        var sessionKey = request.getSession(true).getId();
+        String sessionKey;
         var httpMethod = request.getMethod();
         var uri = request.getRequestURI();
         Bucket bucket;
+        var authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            sessionKey = request.getRequestURI();
+        }else {
+            var token =  authHeader.substring(7);
+            sessionKey = String.valueOf(jwtService.extractUserId(jwtService.extractUsername(token)));
+        }
         //Only when changing the necessary data like login,register,delete,update, or even search as well as post, put, patch, delete
         if (uri.contains("/login") || uri.contains("/register") || uri.contains("/refreshToken") || uri.contains("/log-out") || httpMethod.equalsIgnoreCase("POST") ||  httpMethod.equalsIgnoreCase("PUT") || httpMethod.equalsIgnoreCase("DELETE") || httpMethod.equalsIgnoreCase("PATCH")) {
             bucket = service.resolveStrictBucket(sessionKey);
@@ -38,7 +51,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("\"error\": \"Too Many Requests, please wait!\" ");
+            var responseBody = new ResponseBody<>(HttpStatus.TOO_MANY_REQUESTS.value(), null, "Too Many Requests, please wait!");
+            ObjectMapper mapper = new ObjectMapper();
+            response.getWriter().write(mapper.writeValueAsString(responseBody));
             return false;
         }
     }

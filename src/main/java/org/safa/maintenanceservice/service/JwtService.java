@@ -4,6 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
+import org.safa.maintenanceservice.models.exceptions.NotFoundException;
+import org.safa.maintenanceservice.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,9 @@ public class JwtService {
 
     @Value("${JWT_SECRET_KEY}")
     private String secretKey;
+
+    @Autowired
+    private UserRepository repository;
 
     public AuthUserResponse generateToken(String username) {
         var key = Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -52,7 +58,7 @@ public class JwtService {
                 .getPayload();
     }
 
-    /** We are checking if token is valid username is in place and expiration is validate **/
+    /** We are checking if token is valid username is in place and expiration is validated **/
     public boolean validateToken(String token, UserDetails details) {
         final var username = extractUsername(token);
         return (username.equals(details.getUsername()) && !isTokenExpired(token));
@@ -64,5 +70,8 @@ public class JwtService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+    public long extractUserId(String username){
+        return repository.findByUsername(username).orElseThrow(()->new NotFoundException("not found")).getId();
     }
 }
