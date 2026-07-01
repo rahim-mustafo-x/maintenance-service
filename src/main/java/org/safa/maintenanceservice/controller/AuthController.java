@@ -2,6 +2,7 @@ package org.safa.maintenanceservice.controller;
 
 import org.safa.maintenanceservice.models.dto.ResponseBody;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
+import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
@@ -39,6 +40,10 @@ public class AuthController {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new  ResponseBody<>(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
 
@@ -58,10 +63,13 @@ public class AuthController {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new  ResponseBody<>(HttpStatus.CONFLICT.value(), e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok()
+                    .body(new  ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
 
-    @PatchMapping("/refreshToken")
+    @PostMapping("/refreshToken")
     public ResponseEntity<ResponseBody<AuthUserResponse>> refreshToken(@RequestParam String refreshToken) {
         try {
             AuthUserResponse response = userService.refreshToken(refreshToken);

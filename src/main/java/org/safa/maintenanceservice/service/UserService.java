@@ -53,6 +53,8 @@ public class UserService {
             return response;
         }catch (BadCredentialsException | UsernameNotFoundException e) {
             throw new BadRequestException("Bad credentials");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -83,6 +85,8 @@ public class UserService {
             throw new BadRequestException("Invalid phone number");
         } else if (userRepository.existsByPhoneNumber(request.phoneNumber())) {
             throw new AlreadyExistsException("Phone number already exists");
+        } else if (request.phoneNumber().length() != 13) {
+            throw new BadRequestException("The phone number should be 13 characters for Uzbekistan");
         }
         if (request.role()==null) {
             throw new BadRequestException("Role is required");
@@ -93,15 +97,24 @@ public class UserService {
                 request.fullName(), request.username(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber(), request.role().name(), request.location().latitude(), request.location().longitude()
         ));
         AuthUserResponse response = jwtService.generateToken(request.username());
-        var userId = findIdByUsernameAndPassword(entity.getUsername(), entity.getPassword());
-        //here we are saving the refreshToken
-        tokenService.saveRefreshToken(userId, response.refreshToken());
-        tokenService.saveUserIdToken(response.refreshToken(), userId);
-        return response;
+        try {
+            var userId = findIdByUsernameAndPassword(entity.getUsername(), entity.getPassword());
+            //here we are saving the refreshToken
+            tokenService.saveRefreshToken(userId, response.refreshToken());
+            tokenService.saveUserIdToken(response.refreshToken(), userId);
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private long findIdByUsernameAndPassword(String username, String password){
-        return userRepository.findByUsernameAndPassword(username, password);
+        var response = userRepository.findByUsernameAndPassword(username, password);
+        if (response.isPresent()){
+            return response.get();
+        }else {
+            throw new NotFoundException("User not found");
+        }
     }
 
     public AuthUserResponse refreshToken(String refreshToken) throws NullPointerException {
@@ -135,5 +148,14 @@ public class UserService {
         tokenService.deleteUserId(userId);
         tokenService.deleteUserId(refreshToken);
         return true;
+    }
+
+    public Boolean deleteUser(long userId) {
+        if (userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+            return true;
+        }else {
+            return false;
+        }
     }
 }
