@@ -41,7 +41,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             bucket = service.resolveScrollBucket(sessionKey);
         }else {
             //this is for a user whose habit is to go back and forth for getById or anything similar uri
-            bucket = service.resolveReguralBucket(sessionKey);
+            bucket = service.resolveRegularBucket(sessionKey);
         }
         if (bucket.tryConsume(1)){
             //if the bucket has something in it

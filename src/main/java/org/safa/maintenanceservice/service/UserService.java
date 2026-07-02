@@ -142,11 +142,10 @@ public class UserService {
     }
 
     public Boolean deleteUser(long userId) {
-        if (userRepository.existsById(userId)) {
-            userRepository.deleteById(userId);
-            return true;
-        }else {
+        if (!userRepository.existsById(userId)){
             return false;
         }
+        userRepository.deleteById(userId);
+        return true;
     }
 }
