@@ -29,10 +29,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         Bucket bucket;
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            sessionKey = request.getRequestURI();
+            //instead of uri it helps users to be kept inside the server perfectly fine
+            sessionKey = "ip:"+request.getRemoteAddr() + ":" + uri;
         }else {
             var token =  authHeader.substring(7);
-            sessionKey = String.valueOf(jwtService.extractUserId(jwtService.extractUsername(token)));
+            sessionKey = "user:"+jwtService.extractUserId(token)+":"+uri;
         }
         //Only when changing the necessary data like login,register,delete,update, or even search as well as post, put, patch, delete
         if (uri.contains("/login") || uri.contains("/register") || uri.contains("/refreshToken") || uri.contains("/log-out") || httpMethod.equalsIgnoreCase("POST") ||  httpMethod.equalsIgnoreCase("PUT") || httpMethod.equalsIgnoreCase("DELETE") || httpMethod.equalsIgnoreCase("PATCH")) {

@@ -71,7 +71,7 @@ public class JwtService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-    public long extractUserId(String username){
-        return repository.findByUsername(username).orElseThrow(()->new NotFoundException("not found")).getId();
+    public long extractUserId(String token){
+        return repository.findByUsername(extractUsername(token)).orElseThrow(()->new NotFoundException("not found")).getId();
     }
 }

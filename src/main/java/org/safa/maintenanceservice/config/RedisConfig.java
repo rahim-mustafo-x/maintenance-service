@@ -17,7 +17,7 @@ public class RedisConfig {
         var template = new RedisTemplate<String, Object>();
         template.setConnectionFactory(redisConnectionFactory);
 
-        //In here we enable all serializer
+        //In here we enable all serializers
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new GenericJacksonJsonRedisSerializer(new ObjectMapper()));

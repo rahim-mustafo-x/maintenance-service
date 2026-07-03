@@ -16,18 +16,18 @@ public class RateLimitService {
 
     /** This session key is gained from HttpServletRequest**/
     public Bucket resolveStrictBucket(String sessionKey){
-        return strictBuckets.computeIfAbsent(sessionKey, k->Bucket.builder().addLimit(
-                Bandwidth.builder().capacity(2).refillIntervally(10, Duration.ofMinutes(1)).build()
+        return strictBuckets.computeIfAbsent(sessionKey, _->Bucket.builder().addLimit(
+                Bandwidth.builder().capacity(20).refillIntervally(10, Duration.ofMinutes(1)).build()
         ).build());
     }
     public Bucket resolveRegularBucket(String sessionKey){
-        return regularBuckets.computeIfAbsent(sessionKey, k->Bucket.builder().addLimit(
-                Bandwidth.builder().capacity(2).refillIntervally(100, Duration.ofMinutes(1)).build()
+        return regularBuckets.computeIfAbsent(sessionKey, _->Bucket.builder().addLimit(
+                Bandwidth.builder().capacity(100).refillIntervally(100, Duration.ofMinutes(1)).build()
         ).build());
     }
     public Bucket resolveScrollBucket(String sessionKey){
-        return scrollBuckets.computeIfAbsent(sessionKey, k->Bucket.builder().addLimit(
-                Bandwidth.builder().capacity(2).refillIntervally(20, Duration.ofMinutes(1)).build()
+        return scrollBuckets.computeIfAbsent(sessionKey, _->Bucket.builder().addLimit(
+                Bandwidth.builder().capacity(20).refillIntervally(20, Duration.ofMinutes(1)).build()
         ).build());
     }
 }
