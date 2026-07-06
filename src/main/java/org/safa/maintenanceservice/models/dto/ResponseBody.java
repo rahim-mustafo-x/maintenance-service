@@ -21,4 +21,5 @@ public class ResponseBody <T> {
         this.code = code;
         this.message = message;
     }
+
 }

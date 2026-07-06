@@ -2,7 +2,6 @@ package org.safa.maintenanceservice.controller;
 
 import org.safa.maintenanceservice.models.dto.ResponseBody;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
-import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;

@@ -18,8 +18,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("select u from UserEntity u where u.username=:username")
     Optional<UserEntity> findByUsername(@NonNull @Param("username") String username);
 
-    @Query("select u.id from UserEntity u where u.username=:username and u.password=:password")
-    Optional<Long> findByUsernameAndPassword(@NonNull @Param("username") String username, @NotNull @Param("password") String password);
+    @Query("select u.id from UserEntity u where u.username=:username")
+    Optional<Long> findByUsernameForId(@NonNull @Param("username") String username);
 
     /** we have to add exists by unique things such as username phone number  in order to avoid 403**/
     @Query("select count(u) > 0 from UserEntity u where u.username=:username")

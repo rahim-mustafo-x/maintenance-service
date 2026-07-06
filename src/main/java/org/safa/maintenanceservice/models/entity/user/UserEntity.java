@@ -2,6 +2,9 @@ package org.safa.maintenanceservice.models.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -28,35 +31,16 @@ public class UserEntity {
     private String password;
     @Column(name = "phoneNumber", unique = true)
     private String phoneNumber;
-    @Column(name = "role")
-    private String role;
-    @Column(name = "latitude")
-    private double latitude;
-    @Column(name = "longitude")
-    private double longitude;
+    @OneToMany(mappedBy = "user")
+    @ToString.Exclude
+    private Set<RoleEntity> roles;
 
     /**This is for register**/
-    public UserEntity(String fullName, String username, String password, String phoneNumber, String role, double latitude, double longitude) {
+    public UserEntity(String fullName, String username, String password, String phoneNumber) {
         this.fullName = fullName;
         this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.role = role;
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
-    /** This is for patch requests **/
-    public UserEntity(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
     }
 
-    /** This part is for changing some data in a place called settings **/
-    public UserEntity(Long id, String fullName, String username, String password, String phoneNumber) {
-        this.id = id;
-        this.fullName = fullName;
-        this.username = username;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-    }
 }

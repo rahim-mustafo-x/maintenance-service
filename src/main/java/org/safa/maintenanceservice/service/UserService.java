@@ -4,9 +4,11 @@ import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
+import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
+import org.safa.maintenanceservice.repository.RoleRepository;
 import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,9 @@ public class UserService {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     public AuthUserResponse loginUser(LoginUserRequest loginUserRequest) {
         //here we are putting username & password
@@ -88,14 +93,11 @@ public class UserService {
         } else if (request.phoneNumber().length() != 13) {
             throw new BadRequestException("The phone number should be 13 characters for Uzbekistan");
         }
-        if (request.role()==null) {
-            throw new BadRequestException("Role is required");
-        }
-
-
         UserEntity entity = userRepository.save(new UserEntity(
-                request.fullName(), request.username(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber(), request.role().name(), request.location().latitude(), request.location().longitude()
+                request.fullName(), request.username(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber()
         ));
+        var role = roleRepository.save(new RoleEntity(request.role(), entity));
+        IO.println(role);
         AuthUserResponse response = jwtService.generateToken(request.username());
         try {
             var userId = userRepository.findByUsername(entity.getUsername()).orElseThrow(() -> new NotFoundException("Username not found")).getId();

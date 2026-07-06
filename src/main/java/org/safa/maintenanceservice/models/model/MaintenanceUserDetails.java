@@ -25,9 +25,8 @@ public class MaintenanceUserDetails implements UserDetails {
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
-                new SimpleGrantedAuthority(user.role().name())
-        );
+        //turning every role into simple grand authority
+        return user.roles().stream().map(SimpleGrantedAuthority::new).toList();
     }
 
     @Override
