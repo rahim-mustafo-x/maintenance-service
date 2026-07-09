@@ -103,6 +103,10 @@ public class AuthController {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+        }catch (NullPointerException e){
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
         }
     }
 }

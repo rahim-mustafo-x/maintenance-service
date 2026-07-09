@@ -38,7 +38,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         //Only when changing the necessary data like login,register,delete,update, or even search as well as post, put, patch, delete
         if (uri.contains("/login") || uri.contains("/register") || uri.contains("/refreshToken") || uri.contains("/log-out") || httpMethod.equalsIgnoreCase("POST") ||  httpMethod.equalsIgnoreCase("PUT") || httpMethod.equalsIgnoreCase("DELETE") || httpMethod.equalsIgnoreCase("PATCH")) {
             bucket = service.resolveStrictBucket(sessionKey);
-        } else if (uri.contains("/scroll")) {
+        } else if (uri.contains("scroll")) {
             bucket = service.resolveScrollBucket(sessionKey);
         }else {
             //this is for a user whose habit is to go back and forth for getById or anything similar uri

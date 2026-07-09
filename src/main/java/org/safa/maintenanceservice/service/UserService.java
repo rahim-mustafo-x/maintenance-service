@@ -1,16 +1,20 @@
 package org.safa.maintenanceservice.service;
 
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
+import org.safa.maintenanceservice.models.dto.user.auth.SendCodeRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
+import org.safa.maintenanceservice.models.entity.user.session.SessionEntity;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
+import org.safa.maintenanceservice.repository.SessionRedisRepository;
 import org.safa.maintenanceservice.repository.RoleRepository;
 import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.Duration;
 
 @Service
 public class UserService {
@@ -35,10 +40,16 @@ public class UserService {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    private TokenService tokenService;
+    private RoleRepository roleRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private SessionRedisRepository sessionRedisRepository;
+
+    @Autowired
+    private CodeService codeService;
+
+    @Value("${TELEGRAM_BOT_URL}")
+    private String botUrl;
 
     public AuthUserResponse loginUser(LoginUserRequest loginUserRequest) {
         //here we are putting username & password
@@ -52,9 +63,18 @@ public class UserService {
             }
             AuthUserResponse response = jwtService.generateToken(loginUserRequest.username());
             var userId = userRepository.findByUsername(loginUserRequest.username()).orElseThrow(()->new NotFoundException("Username not found")).getId();
+            var roleEntity = roleRepository.findByRoleAndUserId(loginUserRequest.role(),  userId);
+            if (roleEntity.isEmpty()){
+                var userEntity = userRepository.findByUsernameId(userId);
+                if (userEntity.isEmpty()){
+                    throw new NotFoundException("Username not found");
+                }
+                roleRepository.save(new  RoleEntity(loginUserRequest.role(), userEntity.get()));
+            }
             //here we are saving the refreshToken
-            tokenService.saveRefreshToken(userId, response.refreshToken());
-            tokenService.saveUserIdToken(response.refreshToken(), userId);
+            sessionRedisRepository.save(
+                    new SessionEntity(userId, response.refreshToken(), Duration.ofDays(30).toSeconds())
+            );
             return response;
         }catch (BadCredentialsException | UsernameNotFoundException e) {
             throw new BadRequestException("Bad credentials");
@@ -102,8 +122,9 @@ public class UserService {
         try {
             var userId = userRepository.findByUsername(entity.getUsername()).orElseThrow(() -> new NotFoundException("Username not found")).getId();
             //here we are saving the refreshToken
-            tokenService.saveRefreshToken(userId, response.refreshToken());
-            tokenService.saveUserIdToken(response.refreshToken(), userId);
+            sessionRedisRepository.save(
+                    new SessionEntity(userId, response.refreshToken(), Duration.ofDays(30).toSeconds())
+            );
             return response;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -111,35 +132,33 @@ public class UserService {
     }
 
     public AuthUserResponse refreshToken(String refreshToken) throws NullPointerException {
-        long userId = tokenService.getUserId(refreshToken);
-        String token = tokenService.getRefreshToken(userId);
+        var sessionEntity = sessionRedisRepository.findByRefreshToken(refreshToken);
+        var userId = sessionEntity.getUserId();
         if (userId==0L){
             throw new NotFoundException("User not found");
         }
-        if (token == null) {
+        if (sessionEntity.getRefreshToken() == null) {
             throw new BadRequestException("Invalid refresh token");
-        } else if (!token.equals(refreshToken)) {
+        } else if (!sessionEntity.getRefreshToken().equals(refreshToken)) {
             throw new BadRequestException("Invalid refresh token");
         }
-        tokenService.deleteUserId(userId);
-        tokenService.deleteUserId(refreshToken);
+        sessionRedisRepository.delete(userId);
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         return jwtService.generateToken(user.getUsername());
     }
 
-    public boolean logout(String refreshToken) {
-        long userId = tokenService.getUserId(refreshToken);
-        String token = tokenService.getRefreshToken(userId);
+    public boolean logout(String refreshToken) throws NullPointerException{
+        SessionEntity sessionEntity = sessionRedisRepository.findByRefreshToken(refreshToken);
+        var userId = sessionEntity.getUserId();
         if (userId==0L){
             throw new NotFoundException("User not found");
         }
-        if (token == null) {
+        if (refreshToken == null) {
             throw new BadRequestException("Invalid refresh token");
-        } else if (!token.equals(refreshToken)) {
+        } else if (!sessionEntity.getRefreshToken().equals(refreshToken)) {
             throw new BadRequestException("Invalid refresh token");
         }
-        tokenService.deleteUserId(userId);
-        tokenService.deleteUserId(refreshToken);
+        sessionRedisRepository.deleteByRefreshToken(refreshToken);
         return true;
     }
 
@@ -149,5 +168,12 @@ public class UserService {
         }
         userRepository.deleteById(userId);
         return true;
+    }
+
+    public boolean sendCode(SendCodeRequest sendCodeRequest) {
+        var refreshToken = sendCodeRequest.refreshToken();
+        var userId = sendCodeRequest.userId();
+
+        return false;
     }
 }
