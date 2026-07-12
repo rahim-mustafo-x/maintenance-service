@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalAccessError.class)
-    public ResponseEntity<ResponseBody<?>> handleException(IllegalAccessError e) {
+    public ResponseEntity<ResponseBody<?>> handleIllegalAccessError(IllegalAccessError e) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage()));
     }
 
     @ExceptionHandler(RedisConnectionFailureException.class)
-    public ResponseEntity<ResponseBody<?>> handleException(RedisConnectionFailureException e) {
+    public ResponseEntity<ResponseBody<?>> handleRedisConnectionFailureException(RedisConnectionFailureException e) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new  ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage()));

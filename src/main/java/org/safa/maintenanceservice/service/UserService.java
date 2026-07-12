@@ -1,7 +1,9 @@
 package org.safa.maintenanceservice.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
-import org.safa.maintenanceservice.models.dto.user.auth.SendCodeRequest;
+import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
+import org.safa.maintenanceservice.models.dto.user.auth.CodeRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
@@ -9,12 +11,16 @@ import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
 import org.safa.maintenanceservice.models.entity.user.session.SessionEntity;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
+import org.safa.maintenanceservice.models.exceptions.ExpiredException;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
 import org.safa.maintenanceservice.repository.SessionRedisRepository;
 import org.safa.maintenanceservice.repository.RoleRepository;
 import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +28,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
+
 import java.time.Duration;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -46,7 +58,7 @@ public class UserService {
     private SessionRedisRepository sessionRedisRepository;
 
     @Autowired
-    private CodeService codeService;
+    private CodeRedisService codeRedisService;
 
     @Value("${TELEGRAM_BOT_URL}")
     private String botUrl;
@@ -170,10 +182,67 @@ public class UserService {
         return true;
     }
 
-    public boolean sendCode(SendCodeRequest sendCodeRequest) {
-        var refreshToken = sendCodeRequest.refreshToken();
-        var userId = sendCodeRequest.userId();
+    public boolean sendCode(HttpServletRequest request) {
+        var token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7).trim();
+        long userId = jwtService.extractUserId(token);
+        Optional<UserEntity> userEntity = userRepository.findByUsernameId(userId);
+        if (userEntity.isPresent()) {
+            var user = userEntity.get();
+            var code = codeRedisService.generateCode(6);
+            var codeRequest = new CodeRequest(code, user.getPhoneNumber());
+            var objectMapper = new ObjectMapper();
+            var rawBody = objectMapper.writeValueAsString(codeRequest);
+            var client = RestClient.builder()
+                    .baseUrl(botUrl)
+                    .build();
+            var response = client.post()
+                    .uri("/send_code")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(rawBody)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, String>>(){});
+            var message = Objects.requireNonNull(response).get("message");
+            if (message!=null){
+                codeRedisService.saveCodeFor2Minutes(userId, user.getPhoneNumber(), code);
+                return true;
+            }else {
+                return false;
+            }
+        }else {
+            return false;
+        }
+    }
 
-        return false;
+    public boolean changePassword(ChangePasswordRequest changePasswordRequest, HttpServletRequest request) {
+        var token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7).trim();
+        long userId = jwtService.extractUserId(token);
+        Optional<UserEntity> userEntity = userRepository.findByUsernameId(userId);
+        if (userEntity.isPresent()) {
+            var user = userEntity.get();
+            var code = codeRedisService.getCode(userId, user.getPhoneNumber());
+            if (code==null){
+                throw new NotFoundException("Code not found");
+            }
+            if (codeRedisService.isExpired(userId, user.getPhoneNumber())){
+                throw new ExpiredException("Already expired");
+            }
+            if (!code.equals(changePasswordRequest.code())){
+                throw new BadRequestException("Invalid code");
+            }
+            if (changePasswordRequest.newPassword()==null){
+                throw new BadRequestException("New password is null");
+            }
+            if (changePasswordRequest.newPassword().isEmpty() || changePasswordRequest.newPassword().isBlank()){
+                throw new BadRequestException("New password is empty");
+            }
+            if (changePasswordRequest.newPassword().length() < 6){
+                throw new BadRequestException("Password too short");
+            }
+            userRepository.changePassword(userId, Objects.requireNonNull(bCryptPasswordEncoder.encode(changePasswordRequest.newPassword())));
+            codeRedisService.deleteCode(userId, user.getPhoneNumber());
+            return true;
+        }else {
+            return false;
+        }
     }
 }

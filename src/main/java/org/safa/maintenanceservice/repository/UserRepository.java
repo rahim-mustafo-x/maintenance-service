@@ -1,8 +1,10 @@
 package org.safa.maintenanceservice.repository;
 
+import jakarta.transaction.Transactional;
 import org.jspecify.annotations.NonNull;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,4 +28,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("select count(u) > 0 from UserEntity u where u.phoneNumber=:phoneNumber")
     boolean existsByPhoneNumber(@NonNull @Param("phoneNumber") String phoneNumber);
+
+    @Query("update UserEntity u set u.password=:password where u.id=:userId")
+    @Modifying
+    @Transactional
+    void changePassword(@Param("userId") long userId, @NonNull @Param("password") String password);
 }
