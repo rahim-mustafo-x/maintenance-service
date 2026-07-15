@@ -1,6 +1,7 @@
 package org.safa.maintenanceservice.repository;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,8 +30,16 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("select count(u) > 0 from UserEntity u where u.phoneNumber=:phoneNumber")
     boolean existsByPhoneNumber(@NonNull @Param("phoneNumber") String phoneNumber);
 
-    @Query("update UserEntity u set u.password=:password where u.id=:userId")
     @Modifying
     @Transactional
+    @Query("update UserEntity u set u.password=:password where u.id=:userId")
     void changePassword(@Param("userId") long userId, @NonNull @Param("password") String password);
+
+    @Query("select u from UserEntity u where u.phoneNumber=:phoneNumber")
+    Optional<UserEntity> findByPhoneNumber(@NotNull @Param("phoneNumber") String phoneNumber);
+
+    @Transactional
+    @Modifying
+    @Query("update UserEntity u set u.fullName=:fullName, u.username=:username, u.phoneNumber=:phoneNumber where u.id=:userId")
+    void updateByUserId(@NotNull @Param("fullName") String fullName, @NotNull @Param("username") String username, @NotNull @Param("phoneNumber") String phoneNumber, @Param("userId")  long userId);
 }

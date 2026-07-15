@@ -13,20 +13,20 @@ public class CodeRedisService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public void saveCodeFor2Minutes(long userId, String phoneNumber, String code){
-        redisTemplate.opsForValue().set(codeKeyGenerator(userId, phoneNumber), code, 2, TimeUnit.MINUTES);
+    public void saveCodeFor2Minutes(long userId, String code){
+        redisTemplate.opsForValue().set(codeKeyGenerator(userId), code, 2, TimeUnit.MINUTES);
     }
 
-    public String getCode(long userId, String phoneNumber){
-        return (String) redisTemplate.opsForValue().get(codeKeyGenerator(userId, phoneNumber));
+    public String getCode(long userId){
+        return (String) redisTemplate.opsForValue().get(codeKeyGenerator(userId));
     }
 
-    public void deleteCode(long userId, String phoneNumber){
-        redisTemplate.delete(codeKeyGenerator(userId, phoneNumber));
+    public void deleteCode(long userId){
+        redisTemplate.delete(codeKeyGenerator(userId));
     }
 
-    private String codeKeyGenerator(long userId, String phoneNumber) {
-        return "code_" + userId+"_"+phoneNumber;
+    private String codeKeyGenerator(long userId) {
+        return "code_" + userId;
     }
     public String generateCode(int length){
         if (length<=0){
@@ -41,8 +41,8 @@ public class CodeRedisService {
         }
     }
 
-    public boolean isExpired(long userId, String phoneNumber) {
-        var remainingTime = redisTemplate.getExpire(codeKeyGenerator(userId, phoneNumber), TimeUnit.SECONDS);
+    public boolean isExpired(long userId) {
+        var remainingTime = redisTemplate.getExpire(codeKeyGenerator(userId), TimeUnit.SECONDS);
         return remainingTime == -2;
     }
 }

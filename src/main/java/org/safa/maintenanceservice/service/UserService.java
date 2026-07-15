@@ -1,6 +1,7 @@
 package org.safa.maintenanceservice.service;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import org.safa.maintenanceservice.models.dto.user.UpdateUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.CodeRequest;
@@ -9,17 +10,13 @@ import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserReq
 import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
 import org.safa.maintenanceservice.models.entity.user.session.SessionEntity;
-import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
-import org.safa.maintenanceservice.models.exceptions.BadRequestException;
-import org.safa.maintenanceservice.models.exceptions.ExpiredException;
-import org.safa.maintenanceservice.models.exceptions.NotFoundException;
+import org.safa.maintenanceservice.models.exceptions.*;
 import org.safa.maintenanceservice.repository.SessionRedisRepository;
 import org.safa.maintenanceservice.repository.RoleRepository;
 import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -182,10 +179,8 @@ public class UserService {
         return true;
     }
 
-    public boolean sendCode(HttpServletRequest request) {
-        var token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7).trim();
-        long userId = jwtService.extractUserId(token);
-        Optional<UserEntity> userEntity = userRepository.findByUsernameId(userId);
+    public boolean sendCode(@NotNull String phoneNumber) {
+        Optional<UserEntity> userEntity = userRepository.findByPhoneNumber(phoneNumber);
         if (userEntity.isPresent()) {
             var user = userEntity.get();
             var code = codeRedisService.generateCode(6);
@@ -203,27 +198,26 @@ public class UserService {
                     .body(new ParameterizedTypeReference<Map<String, String>>(){});
             var message = Objects.requireNonNull(response).get("message");
             if (message!=null){
-                codeRedisService.saveCodeFor2Minutes(userId, user.getPhoneNumber(), code);
+                codeRedisService.saveCodeFor2Minutes(user.getId(), code);
                 return true;
             }else {
-                return false;
+                throw new NoResponseException("Something went wrong");
             }
         }else {
-            return false;
+            throw new NotFoundException("User not found");
         }
     }
 
-    public boolean changePassword(ChangePasswordRequest changePasswordRequest, HttpServletRequest request) {
-        var token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7).trim();
-        long userId = jwtService.extractUserId(token);
-        Optional<UserEntity> userEntity = userRepository.findByUsernameId(userId);
+    public boolean changePassword(ChangePasswordRequest changePasswordRequest, String phoneNumber) {
+        Optional<UserEntity> userEntity = userRepository.findByPhoneNumber(phoneNumber);
         if (userEntity.isPresent()) {
             var user = userEntity.get();
-            var code = codeRedisService.getCode(userId, user.getPhoneNumber());
+            var userId = user.getId();
+            var code = codeRedisService.getCode(userId);
             if (code==null){
                 throw new NotFoundException("Code not found");
             }
-            if (codeRedisService.isExpired(userId, user.getPhoneNumber())){
+            if (codeRedisService.isExpired(userId)){
                 throw new ExpiredException("Already expired");
             }
             if (!code.equals(changePasswordRequest.code())){
@@ -239,10 +233,42 @@ public class UserService {
                 throw new BadRequestException("Password too short");
             }
             userRepository.changePassword(userId, Objects.requireNonNull(bCryptPasswordEncoder.encode(changePasswordRequest.newPassword())));
-            codeRedisService.deleteCode(userId, user.getPhoneNumber());
+            codeRedisService.deleteCode(userId);
             return true;
         }else {
             return false;
         }
+    }
+
+    public boolean updateUser(UpdateUserRequest request, long userId) {
+        if (request.fullName().isEmpty()){
+            throw new BadRequestException("Full name is empty");
+        } else if (request.fullName().length() < 6) {
+            throw new BadRequestException("Full name too short");
+        }
+        if (request.username().isEmpty()){
+            throw new BadRequestException("Username is empty");
+        }else if (request.username().length() < 6){
+            throw new BadRequestException("Username too short");
+        } else if (userRepository.existsByUsername(request.username())) {
+            throw new AlreadyExistsException("Username already exists");
+        }
+        if (request.phoneNumber().isEmpty()){
+            throw new BadRequestException("Phone number is empty");
+        } else if (!request.phoneNumber().matches("^\\+?[0-9]{7,15}$")) {
+            throw new BadRequestException("Invalid phone number");
+        }
+        if (userRepository.existsById(userId)) {
+            userRepository.updateByUserId(request.fullName(), request.username(), request.phoneNumber(), userId);
+            return true;
+        }else return false;
+    }
+
+    public long findByUserName(String username) {
+        Optional<UserEntity> userEntity = userRepository.findByUsername(username);
+        if (userEntity.isEmpty()) {
+            return -1;
+        }
+        return userEntity.get().getId();
     }
 }

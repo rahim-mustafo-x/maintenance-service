@@ -46,7 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         }catch (ExpiredJwtException e){
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             var responseBody = new ResponseBody<>(HttpStatus.UNAUTHORIZED.value(), null, "Access token is expired");
