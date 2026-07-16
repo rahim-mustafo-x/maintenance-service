@@ -1,13 +1,12 @@
-package org.safa.maintenanceservice.controller;
+package org.safa.maintenanceservice.controller.user;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.safa.maintenanceservice.models.dto.ResponseBody;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.register.RegisterUserRequest;
 import org.safa.maintenanceservice.models.exceptions.*;
-import org.safa.maintenanceservice.service.UserService;
+import org.safa.maintenanceservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

@@ -1,4 +1,4 @@
-package org.safa.maintenanceservice.service;
+package org.safa.maintenanceservice.service.user;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

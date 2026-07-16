@@ -1,7 +1,8 @@
-package org.safa.maintenanceservice.service;
+package org.safa.maintenanceservice.service.user;
 
 import jakarta.validation.constraints.NotNull;
 import org.safa.maintenanceservice.models.dto.user.UpdateUserRequest;
+import org.safa.maintenanceservice.models.dto.user.UserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.CodeRequest;
@@ -32,6 +33,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -270,5 +272,14 @@ public class UserService {
             return -1;
         }
         return userEntity.get().getId();
+    }
+
+    public UserResponse getCurrentUser(long userId) {
+        Optional<UserEntity> userEntity = userRepository.findById(userId);
+        if (userEntity.isEmpty()) {
+            throw new NotFoundException("User not found");
+        }
+        var user = userEntity.get();
+        return new UserResponse(user.getId(), user.getFullName(), user.getUsername(), user.getPhoneNumber(), user.getRoles().stream().map(role->role.getRole().name()).collect(Collectors.toSet()));
     }
 }

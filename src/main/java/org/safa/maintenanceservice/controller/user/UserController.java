@@ -1,11 +1,12 @@
-package org.safa.maintenanceservice.controller;
+package org.safa.maintenanceservice.controller.user;
 
 import org.safa.maintenanceservice.models.dto.ResponseBody;
 import org.safa.maintenanceservice.models.dto.user.UpdateUserRequest;
+import org.safa.maintenanceservice.models.dto.user.UserResponse;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
-import org.safa.maintenanceservice.service.UserService;
+import org.safa.maintenanceservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,7 +30,7 @@ public class UserController {
         return userService.findByUserName(username);
     }
 
-    @DeleteMapping("/delete-user")
+    @DeleteMapping("/delete")
     public ResponseEntity<ResponseBody<Boolean>> deleteUser() {
         try {
             if (userService.deleteUser(getCurrentUserId())){
@@ -49,12 +50,12 @@ public class UserController {
     }
 
 
-    @PutMapping
+    @PutMapping("update")
     public ResponseEntity<ResponseBody<Boolean>> updateUser(@RequestBody UpdateUserRequest request){
         try {
-            return ResponseEntity.status(HttpStatus.OK)
+            return ResponseEntity.status(HttpStatus.ACCEPTED)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), userService.updateUser(request, getCurrentUserId()), null));
+                    .body(new ResponseBody<>(HttpStatus.ACCEPTED.value(), userService.updateUser(request, getCurrentUserId()), null));
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -67,6 +68,18 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.IM_USED)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new  ResponseBody<>(HttpStatus.IM_USED.value(), false, e.getMessage()));
+        }
+    }
+    @GetMapping("/me")
+    public ResponseEntity<ResponseBody<UserResponse>> getCurrentUser() {
+        try {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ResponseBody<>(HttpStatus.FOUND.value(), userService.getCurrentUser(getCurrentUserId()), null));
+        }catch (NotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), null, e.getMessage()));
         }
     }
 }

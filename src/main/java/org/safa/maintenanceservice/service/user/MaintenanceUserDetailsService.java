@@ -1,4 +1,4 @@
-package org.safa.maintenanceservice.service;
+package org.safa.maintenanceservice.service.user;
 
 import org.jspecify.annotations.NullMarked;
 import org.safa.maintenanceservice.models.dto.user.MaintenanceUser;

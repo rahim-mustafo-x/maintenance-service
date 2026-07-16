@@ -1,4 +1,4 @@
-package org.safa.maintenanceservice.service;
+package org.safa.maintenanceservice.service.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.safa.maintenanceservice.models.dto.ResponseBody;
-import org.safa.maintenanceservice.service.JwtService;
-import org.safa.maintenanceservice.service.MaintenanceUserDetailsService;
+import org.safa.maintenanceservice.service.user.JwtService;
+import org.safa.maintenanceservice.service.user.MaintenanceUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -53,5 +53,11 @@ public class JwtFilter extends OncePerRequestFilter {
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(responseBody));
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        System.out.println(request.getRequestURI());
+        return request.getRequestURI().startsWith("/auth");
     }
 }

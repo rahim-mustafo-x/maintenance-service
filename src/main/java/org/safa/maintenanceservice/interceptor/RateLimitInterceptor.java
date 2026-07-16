@@ -6,9 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.safa.maintenanceservice.models.dto.ResponseBody;
-import org.safa.maintenanceservice.service.JwtService;
-import org.safa.maintenanceservice.service.RateLimitService;
+import org.safa.maintenanceservice.service.user.JwtService;
+import org.safa.maintenanceservice.service.user.RateLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -27,13 +28,17 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         var httpMethod = request.getMethod();
         var uri = request.getRequestURI();
         Bucket bucket;
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        var authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ") ) {
             //instead of uri it helps users to be kept inside the server perfectly fine
             sessionKey = "ip:"+request.getRemoteAddr() + ":" + uri;
         }else {
-            var token =  authHeader.substring(7);
-            sessionKey = "user:"+jwtService.extractUserId(token)+":"+uri;
+            if (!uri.contains("/auth")){
+                var token =  authHeader.substring(7);
+                sessionKey = "user:"+jwtService.extractUserId(token)+":"+uri;
+            }else {
+                sessionKey = "user:"+request.getRemoteAddr() + ":" + uri;
+            }
         }
         //Only when changing the necessary data like login,register,delete,update, or even search as well as post, put, patch, delete
         if (uri.contains("/login") || uri.contains("/register") || uri.contains("/refreshToken") || uri.contains("/log-out") || httpMethod.equalsIgnoreCase("POST") ||  httpMethod.equalsIgnoreCase("PUT") || httpMethod.equalsIgnoreCase("DELETE") || httpMethod.equalsIgnoreCase("PATCH")) {
