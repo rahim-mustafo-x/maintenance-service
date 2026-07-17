@@ -68,13 +68,12 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/refreshToken")
+    @PutMapping("/refreshToken")
     public ResponseEntity<ResponseBody<AuthUserResponse>> refreshToken(@RequestParam String refreshToken) {
         try {
-            AuthUserResponse response = userService.refreshToken(refreshToken);
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), response));
+                    .body(new ResponseBody<>(HttpStatus.OK.value(), userService.refreshToken(refreshToken)));
         }catch (BadRequestException | NullPointerException e){
             String message;
             if(e.getMessage()==null || e.getMessage().isEmpty()) message = "Not found"; else message = e.getMessage();

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public interface SessionRedisRepository extends CrudRepository<SessionEntity, Long> {
-    void delete(long userId);
     void deleteByRefreshToken(String refreshToken);
+    void deleteByUserId(long userId);
     SessionEntity findByRefreshToken(String refreshToken);
 }

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalAccessError.class)
@@ -36,5 +38,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ResponseBody<>(HttpStatus.UNAUTHORIZED.value(), null, e.getMessage()));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ResponseBody<?>> handleIOException(IOException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new  ResponseBody<>(HttpStatus.CONFLICT.value(), null, e.getMessage()));
     }
 }

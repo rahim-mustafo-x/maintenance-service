@@ -28,8 +28,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
-
-import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -84,7 +82,7 @@ public class UserService {
             }
             //here we are saving the refreshToken
             sessionRedisRepository.save(
-                    new SessionEntity(userId, response.refreshToken(), Duration.ofDays(30).toSeconds())
+                    new SessionEntity(userId, response.refreshToken())
             );
             return response;
         }catch (BadCredentialsException | UsernameNotFoundException e) {
@@ -134,7 +132,7 @@ public class UserService {
             var userId = userRepository.findByUsername(entity.getUsername()).orElseThrow(() -> new NotFoundException("Username not found")).getId();
             //here we are saving the refreshToken
             sessionRedisRepository.save(
-                    new SessionEntity(userId, response.refreshToken(), Duration.ofDays(30).toSeconds())
+                    new SessionEntity(userId, response.refreshToken())
             );
             return response;
         } catch (Exception e) {
@@ -153,9 +151,11 @@ public class UserService {
         } else if (!sessionEntity.getRefreshToken().equals(refreshToken)) {
             throw new BadRequestException("Invalid refresh token");
         }
-        sessionRedisRepository.delete(userId);
+        sessionRedisRepository.delete(sessionEntity);
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        return jwtService.generateToken(user.getUsername());
+        AuthUserResponse response = jwtService.generateToken(user.getUsername());
+        sessionRedisRepository.save(new SessionEntity(userId, response.refreshToken()));
+        return response;
     }
 
     public boolean logout(String refreshToken) throws NullPointerException{
@@ -178,6 +178,7 @@ public class UserService {
             return false;
         }
         userRepository.deleteById(userId);
+        sessionRedisRepository.deleteByUserId(userId);
         return true;
     }
 

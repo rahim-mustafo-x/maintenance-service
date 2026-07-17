@@ -4,6 +4,7 @@ import org.safa.maintenanceservice.filter.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,7 +31,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/**",//starting from this endpoint it permittable
                                 "/h2-console/**"
-                        ).permitAll().anyRequest().authenticated()
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/image/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/image/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/v1/image/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/v1/image/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 //In here we are putting our custom filter before anything else
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
