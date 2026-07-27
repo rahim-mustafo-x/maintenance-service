@@ -5,7 +5,7 @@ import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
-import org.safa.maintenanceservice.models.dto.ResponseBody;
+import org.safa.maintenanceservice.models.dto.ApiResponse;
 import org.safa.maintenanceservice.service.user.JwtService;
 import org.safa.maintenanceservice.service.user.RateLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +57,10 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            var responseBody = new ResponseBody<>(HttpStatus.TOO_MANY_REQUESTS.value(), null, "Too Many Requests, please wait!");
+            var responseBody = ApiResponse.builder()
+                    .code(HttpStatus.TOO_MANY_REQUESTS.value())
+                    .message("Too Many Requests, please wait!")
+                    .build();
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(responseBody));
             return false;

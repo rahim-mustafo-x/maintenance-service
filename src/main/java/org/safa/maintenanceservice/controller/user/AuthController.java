@@ -1,6 +1,6 @@
 package org.safa.maintenanceservice.controller.user;
 
-import org.safa.maintenanceservice.models.dto.ResponseBody;
+import org.safa.maintenanceservice.models.dto.ApiResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
 import org.safa.maintenanceservice.models.dto.user.auth.ChangePasswordRequest;
 import org.safa.maintenanceservice.models.dto.user.auth.login.LoginUserRequest;
@@ -21,126 +21,183 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseBody<AuthUserResponse>> login(@RequestBody LoginUserRequest  loginUserRequest) {
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginUserRequest  loginUserRequest) {
         try {
             var response = userService.loginUser(loginUserRequest);
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), response));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.OK.value())
+                            .data(response)
+                            .build());
         }
 
         catch (UsernameNotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message(e.getMessage())
+                            .build());
         }
         catch (BadRequestException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .build());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message(e.getMessage())
+                            .build());
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseBody<AuthUserResponse>> register(@RequestBody RegisterUserRequest request) {
+    public ResponseEntity<ApiResponse<?>> register(@RequestBody RegisterUserRequest request) {
         try {
             AuthUserResponse response = userService.registerUser(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.CREATED.value(), response));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.CREATED.value())
+                            .data(response).
+                            build());
         }catch (BadRequestException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .build());
         }
         catch (AlreadyExistsException e){
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.CONFLICT.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.CONFLICT.value())
+                            .message(e.getMessage())
+                            .build());
         } catch (RuntimeException e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message(e.getMessage())
+                            .build());
         }
     }
 
     @PutMapping("/refreshToken")
-    public ResponseEntity<ResponseBody<AuthUserResponse>> refreshToken(@RequestParam String refreshToken) {
+    public ResponseEntity<ApiResponse<?>> refreshToken(@RequestParam String refreshToken) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), userService.refreshToken(refreshToken)));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.OK.value())
+                            .data(userService.refreshToken(refreshToken))
+                            .build());
         }catch (BadRequestException | NullPointerException e){
             String message;
             if(e.getMessage()==null || e.getMessage().isEmpty()) message = "Not found"; else message = e.getMessage();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.BAD_REQUEST.value(), message));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(message)
+                            .build());
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message(e.getMessage())
+                            .build());
         }
     }
 //this is temporary comment
     @DeleteMapping("/log-out")
-    public ResponseEntity<ResponseBody<Boolean>> logout(@RequestParam String refreshToken) {
+    public ResponseEntity<ApiResponse<?>> logout(@RequestParam String refreshToken) {
         try {
             var response = userService.logout(refreshToken);
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), response));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.OK.value())
+                            .data(response)
+                            .build());
         }catch (BadRequestException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .build());
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message(e.getMessage())
+                            .build());
         }catch (NullPointerException e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message(e.getMessage())
+                            .build());
         }
     }
 
     @PatchMapping("/changePassword")
-    public ResponseEntity<ResponseBody<Boolean>> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, @RequestParam String phoneNumber) {
+    public ResponseEntity<ApiResponse<?>> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, @RequestParam String phoneNumber) {
         try {
             return ResponseEntity.status(HttpStatus.ACCEPTED)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.ACCEPTED.value(), userService.changePassword(changePasswordRequest, phoneNumber), null));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.ACCEPTED.value())
+                            .data(userService.changePassword(changePasswordRequest, phoneNumber)).build());
         }catch (ExpiredException e){
             return ResponseEntity.status(HttpStatus.GONE)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.GONE.value(), false, e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.GONE.value())
+                            .message(e.getMessage()).build());
         }catch (BadRequestException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.BAD_REQUEST.value(), false, e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage()).build());
 
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.NOT_FOUND.value(), false, e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message(e.getMessage()).build());
         }
     }
 
     @PostMapping("/sendChangeCode")
-    public ResponseEntity<ResponseBody<Boolean>> sendChangeCode(@RequestParam String phoneNumber) {
+    public ResponseEntity<ApiResponse<?>> sendChangeCode(@RequestParam String phoneNumber) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new ResponseBody<>(HttpStatus.OK.value(), userService.sendCode(phoneNumber)));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.OK.value())
+                            .data(userService.sendCode(phoneNumber)).build());
         }catch (NoResponseException | NotFoundException e){
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new  ResponseBody<>(HttpStatus.CONFLICT.value(), false, e.getMessage()));
+                    .body(ApiResponse.builder()
+                            .code(HttpStatus.CONFLICT.value())
+                            .message(e.getMessage()).build());
         }
     }
 }

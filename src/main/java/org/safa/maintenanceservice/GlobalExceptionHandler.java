@@ -1,7 +1,8 @@
 package org.safa.maintenanceservice;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import org.safa.maintenanceservice.models.dto.ResponseBody;
+import org.safa.maintenanceservice.models.dto.ApiResponse;
+import org.safa.maintenanceservice.models.exceptions.NoResponseException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,36 +15,63 @@ import java.io.IOException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalAccessError.class)
-    public ResponseEntity<ResponseBody<?>> handleIllegalAccessError(IllegalAccessError e) {
+    public ResponseEntity<ApiResponse<?>> handleIllegalAccessError(IllegalAccessError e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage()));
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(e.getMessage())
+                        .build());
     }
 
     @ExceptionHandler(RedisConnectionFailureException.class)
-    public ResponseEntity<ResponseBody<?>> handleRedisConnectionFailureException(RedisConnectionFailureException e) {
+    public ResponseEntity<ApiResponse<?>> handleRedisConnectionFailureException(RedisConnectionFailureException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new  ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage()));
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(e.getMessage())
+                        .build());
     }
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ResponseBody<?>> handleException(Exception e) {
+    public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new  ResponseBody<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), null, e.getMessage()));
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(e.getMessage())
+                        .build());
     }
 
     @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<ResponseBody<?>> handleExpiredJwtException(ExpiredJwtException e) {
+    public ResponseEntity<ApiResponse<?>> handleExpiredJwtException(ExpiredJwtException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ResponseBody<>(HttpStatus.UNAUTHORIZED.value(), null, e.getMessage()));
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.UNAUTHORIZED.value())
+                        .data(null)
+                        .message(e.getMessage())
+                        .build());
     }
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<ResponseBody<?>> handleIOException(IOException e) {
+    public ResponseEntity<ApiResponse<?>> handleIOException(IOException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new  ResponseBody<>(HttpStatus.CONFLICT.value(), null, e.getMessage()));
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.CONFLICT.value())
+                        .data(null)
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(NoResponseException.class)
+    public ResponseEntity<ApiResponse<?>> handleNoResponseException(NoResponseException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .message(e.getMessage())
+                        .build());
     }
 }

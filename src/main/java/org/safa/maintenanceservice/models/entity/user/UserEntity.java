@@ -2,6 +2,7 @@ package org.safa.maintenanceservice.models.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.safa.maintenanceservice.models.entity.labor.LaborEntity;
 import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
 
 import java.util.Set;
@@ -34,6 +35,9 @@ public class UserEntity {
     @OneToMany(mappedBy = "user")
     @ToString.Exclude
     private Set<RoleEntity> roles;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private LaborEntity labor;
 
     /**This is for register**/
     public UserEntity(String fullName, String username, String password, String phoneNumber) {

@@ -6,9 +6,7 @@ import org.safa.maintenanceservice.models.dto.user.MaintenanceUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
-import java.util.List;
 
 /**
  * This class here helps manage login and register.

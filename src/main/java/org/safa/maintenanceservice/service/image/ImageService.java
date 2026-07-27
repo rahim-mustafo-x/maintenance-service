@@ -6,6 +6,7 @@ import org.safa.maintenanceservice.models.entity.image.ImageEntity;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
 import org.safa.maintenanceservice.models.model.ImageType;
 import org.safa.maintenanceservice.repository.ImageRepository;
+import org.safa.maintenanceservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,8 +19,11 @@ public class ImageService {
     @Autowired
     private ImageRepository imageRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public ImageResponse save(MultipartFile file, ImageType imageType, long ownerId) throws IOException {
-        if (!ownerIdExists(ownerId)){
+        if (notExistsByOwnerId(ownerId)){
             throw new NotFoundException("Owner id not found");
         }
         UUID imageId;
@@ -55,7 +59,7 @@ public class ImageService {
         if (imageEntity.isEmpty()) {
             throw new NotFoundException("Image not found");
         }
-        if (!ownerIdExists(ownerId)){
+        if (notExistsByOwnerId(ownerId)){
             throw new NotFoundException("Owner id not found");
         }
         var image = imageEntity.get();
@@ -75,11 +79,9 @@ public class ImageService {
         return true;
     }
 
-
-
-    //todo implement this function fully
-    private boolean ownerIdExists(long ownerId) {
+    //todo implement deployment id concept as well
+    private boolean notExistsByOwnerId(long ownerId) {
         //check if ownerId exists
-        return true;
+        return !userRepository.existsById(ownerId);
     }
 }

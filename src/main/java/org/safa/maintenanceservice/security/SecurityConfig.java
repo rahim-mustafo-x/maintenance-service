@@ -27,15 +27,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request->
                         request.requestMatchers(
+                                "/",
                                 "/auth/**",
                                 "/swagger-ui/**",
                                 "/v3/**",//starting from this endpoint it permittable
                                 "/h2-console/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/v1/image/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/image/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/v1/image/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/v1/image/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/image/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/v1/image/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/v1/image/**").authenticated()
+                        .requestMatchers("/v1/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 //In here we are putting our custom filter before anything else
@@ -47,7 +49,7 @@ public class SecurityConfig {
 
     /** This is authentication manager it is preferred to use when checking login**/
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
         return configuration.getAuthenticationManager();
     }
 

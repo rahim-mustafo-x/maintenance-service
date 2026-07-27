@@ -7,7 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
-import org.safa.maintenanceservice.models.dto.ResponseBody;
+import org.safa.maintenanceservice.models.dto.ApiResponse;
 import org.safa.maintenanceservice.service.user.JwtService;
 import org.safa.maintenanceservice.service.user.MaintenanceUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +43,29 @@ public class JwtFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 }
+            }else{
+                if (request.getRequestURI().contains("/v1")){
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    var responseBody = ApiResponse.builder()
+                            .code(HttpStatus.UNAUTHORIZED.value())
+                            .message("You are not logged in")
+                            .build();
+                    ObjectMapper mapper = new ObjectMapper();
+                    response.getWriter().write(mapper.writeValueAsString(responseBody));
+                    return;
+                }
+                filterChain.doFilter(request, response);
             }
-            filterChain.doFilter(request, response);
         }catch (ExpiredJwtException e){
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            var responseBody = new ResponseBody<>(HttpStatus.UNAUTHORIZED.value(), null, "Access token is expired");
+            var responseBody = ApiResponse.builder()
+                    .code(HttpStatus.UNAUTHORIZED.value())
+                    .message(e.getMessage())
+                    .build();
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(responseBody));
         }
