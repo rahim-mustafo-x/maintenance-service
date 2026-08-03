@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.safa</groupId>
-    <artifactId>maintenance-service</artifactId>
+    <artifactId>maintenance-service-user-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>maintenance-service</name>
-    <description>maintenance-service</description>
+    <name>maintenance-service-user-service</name>
+    <description>maintenance-service-user-service</description>
     <url/>
     <licenses>
         <license/>
@@ -89,14 +89,6 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 <!--        Redis-->
-<!--        Rate limiting bucket4j-->
-        <dependency>
-            <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j_jdk17-core</artifactId>
-            <version>8.19.0</version>
-            <scope>compile</scope>
-        </dependency>
-<!--        Rate limiting bucket4j-->
 
 <!--        Postgresql for real production-->
         <dependency>

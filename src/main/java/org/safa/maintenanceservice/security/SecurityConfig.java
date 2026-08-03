@@ -33,10 +33,6 @@ public class SecurityConfig {
                                 "/v3/**",//starting from this endpoint it permittable
                                 "/h2-console/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v1/image/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/image/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/v1/image/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/v1/image/**").authenticated()
                         .requestMatchers("/v1/**").authenticated()
                         .anyRequest().authenticated()
                 )
