@@ -28,13 +28,8 @@ public class MaintenanceUserDetailsService implements UserDetailsService {
     @NullMarked
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<UserEntity> userEntity = userRepository.findByUsername(username);
-        if (userEntity.isEmpty()) {
-            throw new UsernameNotFoundException(username);
-        }
-        UserEntity user = userEntity.get();
         return userRepository.findByUsername(username)
-                .map(item->new MaintenanceUserDetails(new MaintenanceUser(item.getUsername(), user.getRoles().stream().map(roles->roles.getRole().name()).collect(Collectors.toSet()), item.getPassword())))
+                .map(item->new MaintenanceUserDetails(new MaintenanceUser(item.getUsername(), item.getRoles().stream().map(roles->roles.getRole().name()).collect(Collectors.toSet()), item.getPassword())))
                 .orElseThrow(()->new UsernameNotFoundException("user not found"));
     }
 }

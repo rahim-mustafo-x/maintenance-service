@@ -127,18 +127,31 @@
             <artifactId>spring-dotenv</artifactId>
             <version>4.0.0</version>
         </dependency>
+
+        <!--        Eureka-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>5.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--        Eureka-->
+
+        <!--        OpenFeign-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>5.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--        OpenFeign-->
     </dependencies>
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
-                <configuration>
-                    <!-- Allows compiling despite missing third-party metadata definitions -->
-                    <fallback>true</fallback>
-                </configuration>
             </plugin>
 
             <plugin>
