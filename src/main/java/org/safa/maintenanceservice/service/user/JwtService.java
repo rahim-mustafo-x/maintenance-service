@@ -3,13 +3,12 @@ package org.safa.maintenanceservice.service.user;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.safa.maintenanceservice.models.dto.user.auth.AuthUserResponse;
-import org.safa.maintenanceservice.models.exceptions.NotFoundException;
-import org.safa.maintenanceservice.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
@@ -21,18 +20,15 @@ public class JwtService {
     @Value("${JWT_SECRET_KEY}")
     private String secretKey;
 
-    @Autowired
-    private UserRepository repository;
-
-    public AuthUserResponse generateToken(String username) {
+    @Transactional(readOnly = true)
+    public AuthUserResponse generateToken(String username, long userId) {
         var key = Keys.hmacShaKeyFor(secretKey.getBytes());
         var accessToken = Jwts.builder()
-                .claims()
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000*60*15))
-                .and()
                 .signWith(key)
+                .claim("userId", userId)
                 .compact();
         var refreshToken = UUID.randomUUID().toString();
         return new AuthUserResponse(accessToken, refreshToken);
@@ -70,8 +66,5 @@ public class JwtService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
-    }
-    public long extractUserId(String token){
-        return repository.findByUsername(extractUsername(token)).orElseThrow(()->new NotFoundException("not found")).getId();
     }
 }

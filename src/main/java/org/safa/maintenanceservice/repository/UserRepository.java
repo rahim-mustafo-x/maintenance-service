@@ -18,9 +18,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("select u from UserEntity u where u.username=:username")
     Optional<UserEntity> findByUsername(@Param("username") String username);
 
-    @Query("select u from UserEntity u where u.id = :userId")
-    Optional<UserEntity> findByUsernameId(@Param("userId") long userId);
-
     /** we have to add exists by unique things such as username phone number  in order to avoid 403**/
     @Query("select count(u) > 0 from UserEntity u where u.username=:username")
     boolean existsByUsername(@Param("username") String username);

@@ -25,7 +25,7 @@ public class LaborController {
     private long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = Objects.requireNonNull(authentication).getName();
-        return userService.findByUserName(username);
+        return userService.findUserIdByUserName(username);
     }
 
     @PostMapping("/set-working-hours")

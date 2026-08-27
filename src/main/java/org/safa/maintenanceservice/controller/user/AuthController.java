@@ -23,12 +23,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginUserRequest  loginUserRequest) {
         try {
-            var response = userService.loginUser(loginUserRequest);
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.builder()
                             .code(HttpStatus.OK.value())
-                            .data(response)
+                            .data(userService.loginUser(loginUserRequest))
                             .build());
         }
 

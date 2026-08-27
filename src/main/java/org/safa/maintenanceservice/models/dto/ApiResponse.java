@@ -5,8 +5,10 @@ import lombok.*;
 @Getter
 @ToString
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ApiResponse<T> {
-    private final int code;
+    private int code;
     private T data;
     private String message;
 }

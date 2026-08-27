@@ -12,6 +12,7 @@ import org.safa.maintenanceservice.models.entity.user.UserEntity;
 import org.safa.maintenanceservice.models.entity.user.role.RoleEntity;
 import org.safa.maintenanceservice.models.entity.user.session.SessionEntity;
 import org.safa.maintenanceservice.models.exceptions.*;
+import org.safa.maintenanceservice.models.model.UserRole;
 import org.safa.maintenanceservice.repository.SessionRedisRepository;
 import org.safa.maintenanceservice.repository.RoleRepository;
 import org.safa.maintenanceservice.repository.UserRepository;
@@ -70,11 +71,11 @@ public class UserService {
             if (!authenticate.isAuthenticated()) {
                 throw new BadCredentialsException("Bad credentials");
             }
-            AuthUserResponse response = jwtService.generateToken(loginUserRequest.username());
+            AuthUserResponse response = jwtService.generateToken(loginUserRequest.username(), findUserIdByUserName(loginUserRequest.username()));
             var userId = userRepository.findByUsername(loginUserRequest.username()).orElseThrow(()->new NotFoundException("Username not found")).getId();
             var roleEntity = roleRepository.findByRoleAndUserId(loginUserRequest.role(),  userId);
             if (roleEntity.isEmpty()){
-                var userEntity = userRepository.findByUsernameId(userId);
+                var userEntity = userRepository.findById(userId);
                 if (userEntity.isEmpty()){
                     throw new NotFoundException("Username not found");
                 }
@@ -125,9 +126,8 @@ public class UserService {
         UserEntity entity = userRepository.save(new UserEntity(
                 request.fullName(), request.username(), bCryptPasswordEncoder.encode(request.password()), request.phoneNumber()
         ));
-        var role = roleRepository.save(new RoleEntity(request.role(), entity));
-        IO.println(role);
-        AuthUserResponse response = jwtService.generateToken(request.username());
+        roleRepository.save(new RoleEntity(request.role(), entity));
+        AuthUserResponse response = jwtService.generateToken(request.username(), findUserIdByUserName(request.username()));
         try {
             var userId = userRepository.findByUsername(entity.getUsername()).orElseThrow(() -> new NotFoundException("Username not found")).getId();
             //here we are saving the refreshToken
@@ -153,7 +153,7 @@ public class UserService {
         }
         sessionRedisRepository.delete(sessionEntity);
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        AuthUserResponse response = jwtService.generateToken(user.getUsername());
+        AuthUserResponse response = jwtService.generateToken(user.getUsername(), findUserIdByUserName(user.getUsername()));
         sessionRedisRepository.save(new SessionEntity(userId, response.refreshToken()));
         return response;
     }
@@ -267,7 +267,7 @@ public class UserService {
         }else return false;
     }
 
-    public long findByUserName(String username) {
+    public long findUserIdByUserName(String username) {
         Optional<UserEntity> userEntity = userRepository.findByUsername(username);
         if (userEntity.isEmpty()) {
             return -1;

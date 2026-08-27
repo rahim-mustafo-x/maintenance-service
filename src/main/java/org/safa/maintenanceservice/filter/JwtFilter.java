@@ -56,15 +56,15 @@ public class JwtFilter extends OncePerRequestFilter {
                     response.getWriter().write(mapper.writeValueAsString(responseBody));
                     return;
                 }
-                filterChain.doFilter(request, response);
             }
-        }catch (ExpiredJwtException e){
+            filterChain.doFilter(request, response);
+        }catch (ExpiredJwtException _){
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             var responseBody = ApiResponse.builder()
                     .code(HttpStatus.UNAUTHORIZED.value())
-                    .message(e.getMessage())
+                    .message("You are not logged in")
                     .build();
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(responseBody));

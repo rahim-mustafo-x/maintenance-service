@@ -2,6 +2,7 @@ package org.safa.maintenanceservice.controller.user;
 
 import org.safa.maintenanceservice.models.dto.ApiResponse;
 import org.safa.maintenanceservice.models.dto.user.UpdateUserRequest;
+import org.safa.maintenanceservice.models.dto.user.UserResponse;
 import org.safa.maintenanceservice.models.exceptions.AlreadyExistsException;
 import org.safa.maintenanceservice.models.exceptions.BadRequestException;
 import org.safa.maintenanceservice.models.exceptions.NotFoundException;
@@ -26,7 +27,7 @@ public class UserController {
     private long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = Objects.requireNonNull(authentication).getName();
-        return userService.findByUserName(username);
+        return userService.findUserIdByUserName(username);
     }
 
     @DeleteMapping("/delete")
@@ -91,18 +92,18 @@ public class UserController {
         }
     }
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<?>> getCurrentUser() {
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
         try {
             return ResponseEntity.status(HttpStatus.FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(ApiResponse.builder()
+                    .body(ApiResponse.<UserResponse>builder()
                             .code(HttpStatus.FOUND.value())
                             .data(userService.getCurrentUser(getCurrentUserId()))
                             .build());
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(ApiResponse.builder()
+                    .body(ApiResponse.<UserResponse>builder()
                             .code(HttpStatus.NOT_FOUND.value())
                             .message(e.getMessage())
                             .build());
