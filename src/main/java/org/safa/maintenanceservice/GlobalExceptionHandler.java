@@ -1,8 +1,8 @@
 package org.safa.maintenanceservice;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import org.safa.maintenanceservice.models.dto.ApiResponse;
-import org.safa.maintenanceservice.models.exceptions.NoResponseException;
+import org.safa.maintenanceservice.admin.exceptions.NoResponseException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -71,6 +71,16 @@ public class GlobalExceptionHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(ApiResponse.builder()
                         .code(HttpStatus.NOT_FOUND.value())
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidDataAccessResourceUsageException(InvalidDataAccessResourceUsageException e){
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ApiResponse.builder()
+                        .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .message(e.getMessage())
                         .build());
     }

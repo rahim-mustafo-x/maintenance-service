@@ -3,7 +3,7 @@ package org.safa.maintenanceservice;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.safa.maintenanceservice.models.model.UserRole;
+import org.safa.maintenanceservice.user.model.UserRole;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
